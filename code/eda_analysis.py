@@ -12,6 +12,7 @@ def eda_analysis(eda):
     #提取清洗過後的eda數據
     cleaned = signals["EDA_Clean"]
     
+    
     #計算各項數據
     signal_avg = np.mean(cleaned)                        #計算單位時間內eda signal的平均值
     signal_std = np.std(cleaned)                         #計算單位時間內eda signal的平均值
@@ -29,23 +30,50 @@ def standardize(data):
 
 
 # main function
+
+index = [303899, 582299, 1657949, 3113849, 1400699, 840149, 421649, 331349] # 各段測試session的起始時間點
+
+for n in range(2, 9):
+   
+    result = pd.DataFrame()
+    time = []
+    
+    data = pd.read_csv("../biomarkers/formal data/csv data/P17_s" + str(n) +".csv")
+
+    for i in range(0, index[n-1]-300000, 150000):
+        print("---------------------[", i ,"]---------------------")
+        time.append(i)  #紀錄開始的時間戳記
+        eda = data['eda'][i:i+300000]   #+300000:每次以300秒(5分鐘)作為一個window
+        signal_avg, signal_std, amplitude_avg, avg_peak = eda_analysis(eda)
+        
+        #合併資料成一個dataframe
+        result = pd.concat([result, pd.DataFrame([signal_avg, signal_std, amplitude_avg, avg_peak]).T], ignore_index=True)
+        print(result)
+    
+    #加上時間戳記
+    result = pd.concat([pd.DataFrame([time]).T, result], axis=1) 
+    
+    #設定dataframe的column名稱
+    result.columns = ['time_index', 'signal_avg', 'signal_std', 'amplitude_avg', 'avg_peak']
+    
+    #顯示最後結果
+    print('\n最後結果:\n' ,result)
+    #儲存成另一csv檔
+    result.to_csv("../EDA analysis/P01-P17 EDA analysis(分段)/P17_s" + str(n) +".csv")
+
+'''
+n = 2
 result = pd.DataFrame()
 time = []
 
-data = pd.read_csv("../OpenSignals_files/20231227/2023-12-27_20-55-13(converted).csv")
+data = pd.read_csv("../biomarkers/formal data/csv data/P16_s" + str(n) +".csv")
 
-for i in range(0, 700000, 150000):
-    print("---------------------[", i ,"]---------------------")
-    time.append(i)  #紀錄開始的時間戳記
-    eda = data['eda'][i:i+300000]   #+300000:每次以300秒(5分鐘)作為一個window)
-    signal_avg, signal_std, amplitude_avg, avg_peak = eda_analysis(eda)
-    
-    #合併資料成一個dataframe
-    result = pd.concat([result, pd.DataFrame([signal_avg, signal_std, amplitude_avg, avg_peak]).T], ignore_index=True)
-    print(result)
-  
-#standardization
-result = standardize(result)
+eda = data['eda']
+signal_avg, signal_std, amplitude_avg, avg_peak = eda_analysis(eda)
+
+#合併資料成一個dataframe
+result = pd.concat([result, pd.DataFrame([signal_avg, signal_std, amplitude_avg, avg_peak]).T], ignore_index=True)
+print(result)
 
 #加上時間戳記
 result = pd.concat([pd.DataFrame([time]).T, result], axis=1) 
@@ -56,4 +84,10 @@ result.columns = ['time_index', 'signal_avg', 'signal_std', 'amplitude_avg', 'av
 #顯示最後結果
 print('\n最後結果:\n' ,result)
 #儲存成另一csv檔
-result.to_csv("../OpenSignals_files/20231227/analysis/2023-12-27_20-55-13(eda_analysis).csv")
+result.to_csv("../EDA analysis/P01-P17 EDA analysis(分段)/P16_s" + str(n) +".csv")
+'''
+
+#standardization
+#result = standardize(result)
+
+
